@@ -1,0 +1,31 @@
+name: Build Latent 36
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: latent36-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    if: github.event.repository.private == false
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify roll rules
+        run: |
+          mkdir -p build
+          swiftc Latent36/Roll.swift tests/main.swift -o build/check-rolls
+          build/check-rolls
+      - name: Build iPhone app
+        run: bash scripts/build-ipa.sh
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Latent36-IPA
+          path: build/Latent36.ipa
+          if-no-files-found: error
+          retention-days: 14
