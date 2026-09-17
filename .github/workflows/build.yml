@@ -18,7 +18,7 @@ jobs:
       - name: Verify roll rules
         run: |
           mkdir -p build
-          swiftc Latent36/Roll.swift tests/main.swift -o build/check-rolls
+          swiftc Latent36/Roll.swift Latent36/FilmProcessor.swift tests/main.swift -o build/check-rolls
           build/check-rolls
       - name: Build iPhone app
         run: bash scripts/build-ipa.sh
@@ -27,5 +27,14 @@ jobs:
         with:
           name: Latent36-IPA
           path: build/Latent36.ipa
+          if-no-files-found: error
+          retention-days: 14
+      - name: Simulator launch and layout check
+        run: bash scripts/simulator-smoke.sh
+      - name: Upload simulator screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: Simulator-screenshots
+          path: build/screenshots/*.png
           if-no-files-found: error
           retention-days: 14

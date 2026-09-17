@@ -19,6 +19,7 @@ struct ShootView: View {
         NavigationStack {
             ZStack {
                 Look.background.ignoresSafeArea()
+                GeometryReader { geometry in
                 ScrollView {
                     VStack(spacing: 16) {
                         header
@@ -54,6 +55,7 @@ struct ShootView: View {
                             }.padding(8).background(.black.opacity(0.55)) }.allowsHitTesting(false)
                         }
                         .aspectRatio(3.0/4, contentMode: .fit)
+                        .frame(height: min((min(geometry.size.width, 480) - 36) * 4 / 3, max(220, geometry.size.height - 290)))
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Look.paper.opacity(0.15)))
 
@@ -103,6 +105,7 @@ struct ShootView: View {
                         }
                     }.padding(18).frame(maxWidth: 480).frame(maxWidth: .infinity)
                 }
+                }
             }
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showFilms) { FilmPicker() }
@@ -113,8 +116,17 @@ struct ShootView: View {
                 Button("Develop all 36 exposures") { if let roll = model.active { Task { await model.develop(roll) } } }
             } message: { Text("Your photographs will unlock 24 hours from now. You can close the app and shoot another roll while you wait.") }
         }
-        .onAppear { syncCamera() }
-        .onDisappear { cancelTimer(); camera.stop() }
+        .onAppear {
+            UIDevice.current.beginGeneratingDeviceOrientationNotifications(); syncCamera()
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--show-film-picker") { showFilms = true }
+            #endif
+        }
+        .onDisappear { cancelTimer(); camera.stop(); UIDevice.current.endGeneratingDeviceOrientationNotifications() }
+        .onChange(of: camera.selectedLens) { _, _ in
+            options.iso = min(max(options.iso, camera.isoRange.lowerBound), camera.isoRange.upperBound)
+            options.shutter = min(max(options.shutter, camera.shutterRange.lowerBound), camera.shutterRange.upperBound)
+        }
         .onChange(of: isSelected) { _, _ in syncCamera() }
         .onChange(of: phase) { _, _ in syncCamera() }
     }

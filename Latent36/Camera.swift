@@ -65,6 +65,7 @@ final class Camera: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
         DispatchQueue.main.async { [weak self] in if let self { action(self) } }
     }
     func start() {
+        queue.async { self.wanted = true }
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized: resume()
         case .notDetermined:
@@ -79,7 +80,7 @@ final class Camera: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
     }
     private func resume() {
         queue.async {
-            self.wanted = true
+            guard self.wanted else { return }
             do {
                 if self.input == nil { try self.configure() }
                 if !self.session.isRunning { self.session.startRunning() }
