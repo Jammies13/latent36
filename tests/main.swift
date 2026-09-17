@@ -55,7 +55,12 @@ for stock in FilmStock.allCases {
     let mean = levels.reduce(0, +) / levels.count
     assert(mean > 10 && mean < 245, "Recipe is nearly blank")
     if stock == .silver {
-        let differences = stride(from: 0, to: pixels.count, by: 4).map { abs(Int(pixels[$0]) - Int(pixels[$0+1])) + abs(Int(pixels[$0+1]) - Int(pixels[$0+2])) }
+        let differences: [Int] = stride(from: 0, to: pixels.count, by: 4).map { index in
+            let red = Int(pixels[index])
+            let green = Int(pixels[index + 1])
+            let blue = Int(pixels[index + 2])
+            return abs(red - green) + abs(green - blue)
+        }
         assert(differences.reduce(0,+) / differences.count < 5, "Silver should be monochrome")
     }
 }

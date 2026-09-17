@@ -111,6 +111,8 @@ struct ShootView: View {
             .sheet(isPresented: $showFilms) { FilmPicker() }
             .sheet(isPresented: $showControls) {
                 ControlsView(camera: camera, options: $options, grid: $grid, timerSeconds: $timerSeconds)
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
             }
             .confirmationDialog("Start developing?", isPresented: $confirmDevelop, titleVisibility: .visible) {
                 Button("Develop all 36 exposures") { if let roll = model.active { Task { await model.develop(roll) } } }
