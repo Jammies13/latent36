@@ -2,6 +2,10 @@
 
 A small, ad-free film camera for iPhone. Load a film stock, shoot 36 photographs, then press **Develop**. The entire roll stays hidden for **24 hours from that button press**. Afterward, open the Darkroom contact sheet and save individual photos or the entire roll to Photos. You can shoot a new roll while others develop.
 
+## AI Disclosure
+
+AI was used heavily in the development of this app. Example photos are not AI generated.
+
 ## Camera and film
 
 - Real AVFoundation capture with available physical main, ultra-wide, telephoto and selfie cameras.
