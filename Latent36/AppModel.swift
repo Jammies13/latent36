@@ -86,7 +86,7 @@ struct RootView: View {
     @State private var selectedTab = 0
     var body: some View {
         TabView(selection: $selectedTab) {
-            ShootView(isSelected: selectedTab == 0).tabItem { Label("Camera", systemImage: "camera") }.tag(0)
+            ShootView(isSelected: selectedTab == 0, openDarkroom: { selectedTab = 1 }).tabItem { Label("Camera", systemImage: "camera") }.tag(0)
             LabView().tabItem { Label("Darkroom", systemImage: "film.stack") }.tag(1)
             GuideView().tabItem { Label("Field notes", systemImage: "book.closed") }.tag(2)
         }

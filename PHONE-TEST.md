@@ -10,3 +10,5 @@
 If something fails, report: installation route (LiveContainer or direct SideStore), versions of iOS and LiveContainer/SideStore, selected lens, exact controls, and error text. Keep any failing installation until its photographs are exported. Do not delete its data to troubleshoot.
 
 There is intentionally no production shortcut to bypass the 24-hour wait. CI tests the boundary using synthetic dates without capturing or revealing real photographs.
+
+UI update: verify all six control tabs and inline sliders; ISO/shutter share AUTO/M, focus and WB have independent AUTO/M. Check Options flash/grid/timer, Darkroom and return navigation, stock previews, and Load/DEV shutter states. Confirm shutter and all controls fit on iPhone 16 Pro without scrolling at default text size.

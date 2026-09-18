@@ -2,7 +2,7 @@ import AVFoundation
 import SwiftUI
 import UIKit
 
-struct CameraOptions {
+struct CameraOptions: Equatable {
     var manualExposure = false
     var iso: Float = 100
     var shutter: Double = 1.0 / 125

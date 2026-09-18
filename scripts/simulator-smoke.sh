@@ -22,6 +22,10 @@ sleep 5
 mkdir -p build/screenshots
 xcrun simctl io "$SIM_ID" screenshot build/screenshots/camera-simulator.png
 xcrun simctl terminate "$SIM_ID" com.jammies13.latent36
+xcrun simctl launch "$SIM_ID" com.jammies13.latent36 --ui-smoke --show-options
+sleep 5
+xcrun simctl io "$SIM_ID" screenshot build/screenshots/options-simulator.png
+xcrun simctl terminate "$SIM_ID" com.jammies13.latent36
 xcrun simctl launch "$SIM_ID" com.jammies13.latent36 --show-film-picker
 sleep 10
 xcrun simctl io "$SIM_ID" screenshot build/screenshots/film-picker-simulator.png

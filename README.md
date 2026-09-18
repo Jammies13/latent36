@@ -55,3 +55,5 @@ The four supplied photographs were copied from decoded RGB pixels into clean PNG
 Visible signs, scenery, logos and other photographic content remain unchanged, as requested. Metadata removal does not anonymize visible content.
 
 This update retains the bundle identifier and roll storage schema. Update the existing LiveContainer app in place and keep its existing data container; do not delete it to install the update.
+
+Camera layout: a large natural viewfinder, six direct controls (EV, ISO, shutter speed, focus, white balance, zoom), an inline adjustment slider, and AUTO/M switches. Options holds flash, grid, timer, reset, and field notes. The shutter loads film when empty and offers development when the roll is full. Darkroom is one tap from the camera.
