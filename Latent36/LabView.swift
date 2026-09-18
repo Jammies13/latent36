@@ -166,6 +166,7 @@ struct GuideView: View {
                     Text("Tap the viewfinder to focus and meter. Open Controls for manual ISO, shutter, focus, white balance, exposure compensation, digital zoom, flash, grid and timer. Available controls depend on the lens. Switching lenses resets camera settings.")
                     Text("Hold the phone sideways to take landscape photographs. The controls stay upright in portrait. A naturally colored viewfinder helps you judge exposure; film recipes are applied to the saved image.")
                     Text("Daylight is soft and warm. Amber adds golden tones and cool shadows. Chrome is punchy and saturated. Silver is monochrome with more grain. These are original digital recipes, not exact reproductions of commercial film stocks.")
+                    Text("Meadow brings lush greens; Coast is cool and airy; Dusk pairs teal shadows with warm color; Faded is matte and pastel; Sepia is warm monochrome; Noir is bold black and white. Before loading a roll, try all ten stocks on four built-in samples and compare Film with Original. Sample browsing never exposes your own undeveloped photos.")
                 }
                 Section("LiveContainer & SideStore") {
                     Text("Use LiveContainer's normal full-screen launch. Allow camera access when prompted; iOS may show LiveContainer's name. To export developed photographs, allow Photos access too. No microphone, JIT, app extensions, or special entitlements are required.")

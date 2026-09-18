@@ -13,6 +13,10 @@ magic, cpu = struct.unpack("<II", binary.read_bytes()[:8])
 assert magic == 0xFEEDFACF and cpu == 0x0100000C, "Expected an arm64 Mach-O device binary"
 assert info["CFBundlePackageType"] == "APPL"
 assert "iPhoneOS" in info["CFBundleSupportedPlatforms"], "Simulator builds cannot run on a phone"
+for name in ['clouds', 'river', 'aurora', 'motorsport']:
+    source = root / 'Latent36/PreviewSamples' / (name + '.png')
+    bundled = app / 'PreviewSamples' / (name + '.png')
+    assert bundled.read_bytes() == source.read_bytes(), 'Bundled sample differs from sanitized source'
 
 ipa = root / "build/Latent36.ipa"
 with zipfile.ZipFile(ipa, "w", zipfile.ZIP_DEFLATED) as archive:

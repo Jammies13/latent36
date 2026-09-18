@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import ImageIO
 
 struct ShootView: View {
     @EnvironmentObject var model: AppModel
@@ -146,6 +147,9 @@ struct ShootView: View {
         }.foregroundStyle(Look.paper)
     }
     private func syncCamera() {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--show-film-picker") || ProcessInfo.processInfo.arguments.contains("--ui-smoke") { return }
+        #endif
         if isSelected && phase == .active { camera.start() }
         else { cancelTimer(); camera.stop() }
     }
@@ -177,29 +181,156 @@ struct ShootView: View {
 struct FilmPicker: View {
     @EnvironmentObject var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    @State private var selectedStock: FilmStock = .daylight
+    @State private var sample: SampleScene = .clouds
+    @State private var showOriginal = false
+    @State private var rendered: UIImage?
+    @State private var original: UIImage?
+    @State private var previewError: String?
+    @State private var renderedKey: String?
+    private var previewKey: String { sample.rawValue + "/" + selectedStock.rawValue }
+    init() {
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        _selectedStock = State(initialValue: args.contains("--preview-noir") ? .noir : .daylight)
+        _showOriginal = State(initialValue: args.contains("--preview-original"))
+        #endif
+    }
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    Text("Choose the look for all 36 exposures. Film is applied to your saved photos; the viewfinder stays natural.")
-                }
-                ForEach(FilmStock.allCases) { stock in
-                    Button {
-                        Task { await model.newRoll(stock); if model.active != nil { dismiss() } }
-                    } label: {
-                        HStack(spacing: 16) {
-                            RoundedRectangle(cornerRadius: 7).fill(Look.stock(stock)).frame(width: 36, height: 52)
-                                .overlay(Text("36").font(.system(.headline, design: .monospaced)).foregroundStyle(.black))
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(stock.name).font(.system(.headline, design: .monospaced)).foregroundStyle(Look.paper)
-                                Text(stock.note).font(.caption).foregroundStyle(.secondary)
+            ScrollViewReader { scroll in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text("TRY THE FILM").font(.system(.caption, design: .monospaced)).tracking(2)
+                                Spacer()
+                                Text("\(FilmStock.allCases.count) STOCKS").font(.system(.caption2, design: .monospaced)).foregroundStyle(.secondary)
                             }
-                        }.padding(.vertical, 8)
-                    }.disabled(model.busy || !model.loaded || model.active != nil)
+                            ZStack {
+                                Look.panel
+                                if renderedKey == previewKey, let displayed = showOriginal ? original : rendered {
+                                    Image(uiImage: displayed).resizable().scaledToFit()
+                                        .accessibilityLabel("\(sample.title) sample, \(showOriginal ? "original" : selectedStock.name)")
+                                } else if let previewError {
+                                    VStack { Image(systemName: "photo"); Text(previewError).font(.caption); Button("Retry") { Task { await loadPreview() } } }.padding()
+                                } else { ProgressView("Rendering film…") }
+                            }
+                            .aspectRatio(4.0/3, contentMode: .fit)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            Picker("Compare", selection: $showOriginal) {
+                                Text("Film").tag(false); Text("Original").tag(true)
+                            }.pickerStyle(.segmented)
+                            Picker("Sample photograph", selection: $sample) {
+                                ForEach(SampleScene.allCases) { scene in Text(scene.title).tag(scene) }
+                            }.pickerStyle(.segmented)
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(selectedStock.name).font(.system(.title3, design: .monospaced)).bold().foregroundStyle(Look.stock(selectedStock))
+                                Text(selectedStock.note).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Text("Built-in samples use the same film processing as your photographs. Your shooting viewfinder stays natural.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }.id("preview")
+
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                            ForEach(FilmStock.allCases) { stock in
+                                Button {
+                                    selectedStock = stock
+                                    showOriginal = false
+                                    withAnimation { scroll.scrollTo("preview", anchor: .top) }
+                                } label: {
+                                    HStack(spacing: 8) {
+                                        RoundedRectangle(cornerRadius: 3).fill(Look.stock(stock)).frame(width: 6)
+                                        VStack(alignment: .leading, spacing: 5) {
+                                            Text(stock.name).font(.system(size: 12, weight: .bold, design: .monospaced))
+                                            Text(stock.note).font(.system(size: 10)).foregroundStyle(.secondary).multilineTextAlignment(.leading)
+                                        }.frame(maxWidth: .infinity, alignment: .leading)
+                                        if stock == selectedStock { Image(systemName: "checkmark.circle.fill").foregroundStyle(Look.accent).font(.caption) }
+                                    }.padding(12).frame(maxWidth: .infinity, minHeight: 90, alignment: .leading)
+                                        .background(Look.panel, in: RoundedRectangle(cornerRadius: 10))
+                                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(stock == selectedStock ? Look.accent : .clear, lineWidth: 1.5))
+                                }.buttonStyle(.plain).accessibilityAddTraits(stock == selectedStock ? .isSelected : [])
+                            }
+                        }
+                        Text("Choosing a preview does not load a roll. Tap Load film when you're ready. One stock stays with all 36 exposures; stock numbers aren't a forced sensor ISO.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }.padding(18).frame(maxWidth: 600).frame(maxWidth: .infinity)
                 }
-                Section { Text("Stock numbers describe the creative look, not a locked sensor ISO. Use camera controls to set the actual exposure.").font(.caption) }
-            }.navigationTitle("Load film").toolbar { Button("Done") { dismiss() } }
+                .background(Look.background)
+            }
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    let stock = selectedStock
+                    Task { await model.newRoll(stock); if model.active != nil { dismiss() } }
+                } label: {
+                    HStack { if model.busy { ProgressView() }; Text("Load \(selectedStock.name) · 36 exposures").font(.subheadline.bold()) }
+                        .frame(maxWidth: .infinity).padding(.vertical, 8)
+                }.buttonStyle(.borderedProminent)
+                    .disabled(model.busy || !model.loaded || model.active != nil)
+                    .padding(.horizontal, 18).padding(.vertical, 10).background(.ultraThinMaterial)
+            }
+            .navigationTitle("Choose film").navigationBarTitleDisplayMode(.inline)
+            .toolbar { Button("Done") { dismiss() } }
+            .task(id: previewKey) { await loadPreview() }
         }.tint(Look.accent)
+    }
+
+    @MainActor private func loadPreview() async {
+        let key = previewKey
+        let scene = sample
+        let stock = selectedStock
+        renderedKey = nil; previewError = nil
+        do {
+            let images = try await SamplePreviews.shared.images(scene: scene, stock: stock)
+            guard !Task.isCancelled, previewKey == key else { return }
+            original = images.original; rendered = images.film; renderedKey = key
+        } catch {
+            guard !Task.isCancelled, previewKey == key else { return }
+            previewError = "Sample preview unavailable. Please retry."
+        }
+    }
+}
+
+enum SampleScene: String, CaseIterable, Identifiable {
+    case clouds, river, aurora, motorsport
+    var id: String { rawValue }
+    var title: String { rawValue.capitalized }
+}
+
+// Bounded, in-memory cache; previewing never touches a user's film library.
+actor SamplePreviews {
+    static let shared = SamplePreviews()
+    struct Pair { let original: UIImage; let film: UIImage }
+    private let processor = FilmProcessor()
+    private let cache: NSCache<NSString, UIImage> = {
+        let cache = NSCache<NSString, UIImage>()
+        cache.totalCostLimit = 32 * 1024 * 1024
+        cache.countLimit = 12
+        return cache
+    }()
+    func images(scene: SampleScene, stock: FilmStock) throws -> Pair {
+        try Task.checkCancellation()
+        guard let url = Bundle.main.url(forResource: scene.rawValue, withExtension: "png", subdirectory: "PreviewSamples") else { throw RollError.invalidData }
+        let key = "\(scene.rawValue)/\(stock.rawValue)" as NSString
+        let originalKey = "\(scene.rawValue)/original" as NSString
+        return try autoreleasepool {
+            let data = try Data(contentsOf: url)
+            let original = try cache.object(forKey: originalKey) ?? thumbnail(data)
+            cache.setObject(original, forKey: originalKey, cost: 1200 * 900 * 4)
+            if let film = cache.object(forKey: key) { return Pair(original: original, film: film) }
+            let processed = try processor.render(data, stock: stock)
+            try Task.checkCancellation()
+            let film = try thumbnail(processed)
+            cache.setObject(film, forKey: key, cost: 1200 * 900 * 4)
+            return Pair(original: original, film: film)
+        }
+    }
+    private func thumbnail(_ data: Data) throws -> UIImage {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil), let cg = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: 1200,
+            kCGImageSourceCreateThumbnailWithTransform: true] as CFDictionary) else { throw RollError.invalidData }
+        return UIImage(cgImage: cg)
     }
 }
 

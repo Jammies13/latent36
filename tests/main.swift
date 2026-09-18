@@ -29,6 +29,12 @@ let restored = try JSONDecoder().decode(Roll.self, from: JSONEncoder().encode(ro
 assert(restored == roll)
 assert(restored.readyAt == pressDevelop.addingTimeInterval(86400))
 assert(restored.isReady(at: pressDevelop.addingTimeInterval(90000)))
+// Raw values used by already-installed versions must remain readable.
+for raw in ["daylight", "amber", "chrome", "silver"] {
+    let legacy = "{\"id\":\"11111111-1111-1111-1111-111111111111\",\"stock\":\"\(raw)\",\"createdAt\":1,\"frames\":[\"existing.frame\"]}"
+    let existing = try JSONDecoder().decode(Roll.self, from: Data(legacy.utf8))
+    assert(existing.stock.rawValue == raw && existing.frames == ["existing.frame"])
+}
 for stock in FilmStock.allCases {
     let saved = try JSONDecoder().decode(Roll.self, from: JSONEncoder().encode(Roll(stock: stock, createdAt: start)))
     assert(saved.stock == stock)
@@ -54,15 +60,31 @@ for stock in FilmStock.allCases {
     assert(levels.max()! - levels.min()! > 30, "Recipe lost image detail")
     let mean = levels.reduce(0, +) / levels.count
     assert(mean > 10 && mean < 245, "Recipe is nearly blank")
-    if stock == .silver {
+    if stock == .silver || stock == .noir {
         let differences: [Int] = stride(from: 0, to: pixels.count, by: 4).map { index in
             let red = Int(pixels[index])
             let green = Int(pixels[index + 1])
             let blue = Int(pixels[index + 2])
             return abs(red - green) + abs(green - blue)
         }
-        assert(differences.reduce(0,+) / differences.count < 5, "Silver should be monochrome")
+        assert(differences.reduce(0,+) / differences.count < 5, "Silver and Noir should be monochrome")
     }
 }
 expectFailure { _ = try processor.render(Data([0,1,2]), stock: .daylight) }
-print("PASS: all four film recipes create nonblank, correctly sized JPEGs; Silver is monochrome; invalid captures rejected.")
+print("PASS: all ten film recipes create nonblank, correctly sized JPEGs; monochrome stocks checked; invalid captures rejected.")
+
+let previewFolder = URL(fileURLWithPath: "build/film-previews", isDirectory: true)
+try FileManager.default.createDirectory(at: previewFolder, withIntermediateDirectories: true)
+for scene in ["clouds", "river", "aurora", "motorsport"] {
+    let sample = try Data(contentsOf: URL(fileURLWithPath: "Latent36/PreviewSamples/\(scene).png"))
+    for stock in FilmStock.allCases {
+        try autoreleasepool {
+            let jpeg = try processor.render(sample, stock: stock)
+            guard let source = CGImageSourceCreateWithData(jpeg as CFData, nil),
+                  let cg = CGImageSourceCreateImageAtIndex(source, 0, nil) else { fatalError("Invalid built-in preview") }
+            assert(cg.width == 2880 && cg.height == 2160)
+            try jpeg.write(to: previewFolder.appendingPathComponent("\(scene)-\(stock.rawValue).jpg"))
+        }
+    }
+}
+print("PASS: all 40 sample/stock combinations rendered through the production photo pipeline.")

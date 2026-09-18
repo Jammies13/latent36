@@ -5,6 +5,16 @@
 	};
 	"objectVersion" = "56";
 	"objects" = {
+        "00000000000000000000012C" = {
+            "isa" = "PBXFileReference";
+            "lastKnownFileType" = "folder";
+            "path" = "PreviewSamples";
+            "sourceTree" = "<group>";
+        };
+        "00000000000000000000012D" = {
+            "isa" = "PBXBuildFile";
+            "fileRef" = "00000000000000000000012C";
+        };
 		"000000000000000000000001" = {
 			"isa" = "PBXProject";
 			"attributes" = {
@@ -28,7 +38,7 @@
 		};
 		"000000000000000000000003" = {
 			"isa" = "PBXGroup";
-			"children" = ("000000000000000000000005", "000000000000000000000006", "000000000000000000000007", "000000000000000000000064", "000000000000000000000065", "000000000000000000000066", "000000000000000000000067", "000000000000000000000068", "000000000000000000000069",);
+			"children" = ("000000000000000000000005", "000000000000000000000006", "000000000000000000000007", "000000000000000000000064", "000000000000000000000065", "000000000000000000000066", "000000000000000000000067", "000000000000000000000068", "000000000000000000000069", "00000000000000000000012C",);
 			"path" = "Latent36";
 			"sourceTree" = "<group>";
 		};
@@ -89,7 +99,7 @@
 		"00000000000000000000000D" = {
 			"isa" = "PBXResourcesBuildPhase";
 			"buildActionMask" = "2147483647";
-			"files" = ("00000000000000000000000F",);
+			"files" = ("00000000000000000000000F", "00000000000000000000012D",);
 			"runOnlyForDeploymentPostprocessing" = "0";
 		};
 		"00000000000000000000000E" = {
@@ -147,11 +157,11 @@
 			"buildSettings" = {
 				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
 				"CODE_SIGN_STYLE" = "Automatic";
-				"CURRENT_PROJECT_VERSION" = "1";
+				"CURRENT_PROJECT_VERSION" = "2";
 				"GENERATE_INFOPLIST_FILE" = "NO";
 				"INFOPLIST_FILE" = "Latent36/Info.plist";
 				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks",);
-				"MARKETING_VERSION" = "1.0";
+				"MARKETING_VERSION" = "1.1";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "com.jammies13.latent36";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
@@ -167,11 +177,11 @@
 			"buildSettings" = {
 				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
 				"CODE_SIGN_STYLE" = "Automatic";
-				"CURRENT_PROJECT_VERSION" = "1";
+				"CURRENT_PROJECT_VERSION" = "2";
 				"GENERATE_INFOPLIST_FILE" = "NO";
 				"INFOPLIST_FILE" = "Latent36/Info.plist";
 				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks",);
-				"MARKETING_VERSION" = "1.0";
+				"MARKETING_VERSION" = "1.1";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "com.jammies13.latent36";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";

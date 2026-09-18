@@ -17,13 +17,21 @@ PY
 xcrun simctl boot "$SIM_ID" || true
 xcrun simctl bootstatus "$SIM_ID" -b
 xcrun simctl install "$SIM_ID" build/Simulator/Build/Products/Debug-iphonesimulator/Latent36.app
-xcrun simctl launch "$SIM_ID" com.jammies13.latent36
+xcrun simctl launch "$SIM_ID" com.jammies13.latent36 --ui-smoke
 sleep 5
 mkdir -p build/screenshots
 xcrun simctl io "$SIM_ID" screenshot build/screenshots/camera-simulator.png
 xcrun simctl terminate "$SIM_ID" com.jammies13.latent36
 xcrun simctl launch "$SIM_ID" com.jammies13.latent36 --show-film-picker
-sleep 4
+sleep 10
 xcrun simctl io "$SIM_ID" screenshot build/screenshots/film-picker-simulator.png
+xcrun simctl terminate "$SIM_ID" com.jammies13.latent36
+xcrun simctl launch "$SIM_ID" com.jammies13.latent36 --show-film-picker --preview-noir
+sleep 10
+xcrun simctl io "$SIM_ID" screenshot build/screenshots/film-picker-noir.png
+xcrun simctl terminate "$SIM_ID" com.jammies13.latent36
+xcrun simctl launch "$SIM_ID" com.jammies13.latent36 --show-film-picker --preview-original
+sleep 10
+xcrun simctl io "$SIM_ID" screenshot build/screenshots/film-picker-original.png
 xcrun simctl terminate "$SIM_ID" com.jammies13.latent36
 echo 'Simulator launches completed. A physical camera/LiveContainer test is still required.'

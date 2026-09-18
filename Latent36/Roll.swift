@@ -1,11 +1,14 @@
 import Foundation
 
 enum FilmStock: String, Codable, CaseIterable, Identifiable {
-    case daylight, amber, chrome, silver
+    case daylight, amber, chrome, silver, meadow, coast, dusk, faded, sepia, noir
     var id: String { rawValue }
     var name: String {
         switch self { case .daylight: return "DAYLIGHT 200"; case .amber: return "AMBER 400"
-        case .chrome: return "CHROME 100"; case .silver: return "SILVER 400" }
+        case .chrome: return "CHROME 100"; case .silver: return "SILVER 400"
+        case .meadow: return "MEADOW 160"; case .coast: return "COAST 100"
+        case .dusk: return "DUSK 800"; case .faded: return "FADED 100"
+        case .sepia: return "SEPIA 200"; case .noir: return "NOIR 1600" }
     }
     var note: String {
         switch self {
@@ -13,6 +16,12 @@ enum FilmStock: String, Codable, CaseIterable, Identifiable {
         case .amber: return "Golden highlights · cool shadows · stronger grain"
         case .chrome: return "Rich color · deep blacks · crisp daylight"
         case .silver: return "Black & white · textured grain · lifted shadows"
+        case .meadow: return "Lush greens · warm light · gentle contrast"
+        case .coast: return "Cool blues · airy highlights · delicate color"
+        case .dusk: return "Teal shadows · warm color · cinematic contrast"
+        case .faded: return "Pastel color · matte blacks · nostalgic warmth"
+        case .sepia: return "Warm monochrome · soft contrast · antique texture"
+        case .noir: return "Deep black & white · hard contrast · bold grain"
         }
     }
 }

@@ -74,7 +74,10 @@ enum Look {
     static let accent = Color(red: 0.96, green: 0.61, blue: 0.24)
     static func stock(_ stock: FilmStock) -> Color {
         switch stock { case .daylight: return .yellow; case .amber: return .orange
-        case .chrome: return .mint; case .silver: return .gray }
+        case .chrome: return .mint; case .silver: return .gray
+        case .meadow: return .green; case .coast: return .cyan
+        case .dusk: return .indigo; case .faded: return .pink
+        case .sepia: return .brown; case .noir: return .white }
     }
 }
 

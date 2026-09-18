@@ -7,7 +7,8 @@ A small, ad-free film camera for iPhone. Load a film stock, shoot 36 photographs
 - Real AVFoundation capture with available physical main, ultra-wide, telephoto and selfie cameras.
 - Tap to focus/meter, auto exposure with EV compensation, manual ISO and shutter, manual focus, manual white balance, digital zoom, flash, thirds grid, 3/10-second timer.
 - Hardware capabilities determine available controls; switching lenses resets controls. Flash is disabled during manual exposure so the chosen exposure is respected.
-- Four original Core Image recipes: Daylight 200 (soft/warm), Amber 400 (warm highlights/cool shadows), Chrome 100 (saturated/contrasty), Silver 400 (monochrome/grain).
+- Ten original Core Image recipes: Daylight 200, Amber 400, Chrome 100, Silver 400, Meadow 160, Coast 100, Dusk 800, Faded 100, Sepia 200, Noir 1600. The original four recipes retain their parameters.
+- Before loading, try any stock on four built-in sample photos (clouds, river, aurora, motorsport). Toggle Film/Original and explicitly press Load to commit. Previews use the same production renderer as captured photos and are cached in bounded memory; no network or Photos permission is needed for samples.
 - Natural viewfinder; processed film photographs are revealed only after development. Recipe numbers are creative names, not a forced sensor ISO or licensed commercial stock simulation.
 - Capture prefers approximately 12 MP where supported; rendered JPEGs are capped at 4096 pixels on the longest edge to bound memory. No RAW, video, or Live Photos.
 - Portrait interface with orientation-aware landscape photo capture.
@@ -46,3 +47,11 @@ On a Mac with Xcode: `bash scripts/build-ipa.sh`.
 CI executes the shared roll model against capacity limits, early-development rejection, explicit development start, the exact 24-hour boundary, extra-capture rejection, and JSON persistence, then compiles a Release iPhoneOS app. The packager checks for an arm64 Mach-O binary and correct iPhoneOS bundle before generating the IPA.
 
 Physical camera, rendering appearance and LiveContainer execution require device testing. They cannot be verified by a Windows machine or a successful compiler result alone. See `PHONE-TEST.md` for the device checklist.
+
+## Sample-photo privacy
+
+The four supplied photographs were copied from decoded RGB pixels into clean PNG files before their first commit. Visual pixel content is preserved. Only IHDR, IDAT, and IEND chunks are allowed: no EXIF/GPS, text, timestamps, device identifiers, color-profile payloads, or other ancillary metadata. Generic scene filenames replace the originals. `scripts/verify-samples.py` enforces this in CI, and the IPA packager verifies the bundled copies are byte-identical to the checked sources. Original source paths and originals are not stored in the repository.
+
+Visible signs, scenery, logos and other photographic content remain unchanged, as requested. Metadata removal does not anonymize visible content.
+
+This update retains the bundle identifier and roll storage schema. Update the existing LiveContainer app in place and keep its existing data container; do not delete it to install the update.
