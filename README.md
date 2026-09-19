@@ -52,7 +52,7 @@ On a Mac with Xcode: `bash scripts/build-ipa.sh`.
 
 CI executes the shared roll model against capacity limits, early-development rejection, explicit development start, the exact 24-hour boundary, extra-capture rejection, and JSON persistence, then compiles a Release iPhoneOS app. The packager checks for an arm64 Mach-O binary and correct iPhoneOS bundle before generating the IPA.
 
-The vault regression suite also uses disposable encrypted fixtures to check interrupted initialization, missing indexes, missing or invalid keys, malformed metadata, unchanged files after failed loads, retry after index restoration, and the development lock. Run it on a Mac with `mkdir -p build && swiftc -parse-as-library Latent36/Roll.swift Latent36/FilmProcessor.swift Latent36/Vault.swift tests/vault.swift -o build/check-vault && build/check-vault`.
+The vault regression suite also uses disposable encrypted fixtures to check interrupted initialization, missing indexes, missing or invalid keys, malformed metadata, unchanged files after failed loads, retry after index restoration, and the development lock. Run it on a Mac with `mkdir -p build && swiftc -parse-as-library Latent36/Roll.swift Latent36/FilmProcessor.swift Latent36/Vault.swift tests/VaultChecks.swift -o build/check-vault && build/check-vault`.
 
 Physical camera, rendering appearance and LiveContainer execution require device testing. They cannot be verified by a Windows machine or a successful compiler result alone. See `PHONE-TEST.md` for the device checklist.
 

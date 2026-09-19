@@ -24,7 +24,7 @@ jobs:
           build/check-rolls
       - name: Verify film library recovery safety
         run: |
-          swiftc -parse-as-library Latent36/Roll.swift Latent36/FilmProcessor.swift Latent36/Vault.swift tests/vault.swift -o build/check-vault
+          swiftc -parse-as-library Latent36/Roll.swift Latent36/FilmProcessor.swift Latent36/Vault.swift tests/VaultChecks.swift -o build/check-vault
           build/check-vault
       - name: Build iPhone app
         run: bash scripts/build-ipa.sh
