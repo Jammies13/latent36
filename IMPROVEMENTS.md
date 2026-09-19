@@ -16,6 +16,7 @@ Protect existing photographs during library startup failures while retaining the
 - Generate deterministic monochrome texture with bounded single-channel scratch, neutral overlay blending and cancellation checks.
 - Add Photos export progress and cooperative stopping after an in-flight save completes.
 - Add numerical texture regressions, full-resolution detail crops, and a Heavy grain simulator screenshot.
+- Add a 3x sample-detail toggle with matching Film/Original crops for inspecting grain before loading.
 
 ## Validation
 

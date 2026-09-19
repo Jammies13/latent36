@@ -281,6 +281,7 @@ struct FilmPicker: View {
     @State private var selectedGrain: FilmGrain = .classic
     @State private var sample: SampleScene = .clouds
     @State private var showOriginal = false
+    @State private var showDetail = false
     @State private var rendered: UIImage?
     @State private var original: UIImage?
     @State private var previewError: String?
@@ -292,6 +293,7 @@ struct FilmPicker: View {
         _selectedStock = State(initialValue: args.contains("--preview-noir") ? .noir : .daylight)
         _showOriginal = State(initialValue: args.contains("--preview-original"))
         _selectedGrain = State(initialValue: args.contains("--preview-heavy") ? .heavy : .classic)
+        _showDetail = State(initialValue: args.contains("--preview-heavy"))
         #endif
     }
     var body: some View {
@@ -303,13 +305,15 @@ struct FilmPicker: View {
                             HStack {
                                 Text("TRY THE FILM").font(.system(.caption, design: .monospaced)).tracking(2)
                                 Spacer()
-                                Text("\(FilmStock.allCases.count) STOCKS").font(.system(.caption2, design: .monospaced)).foregroundStyle(.secondary)
+                                Button(showDetail ? "Full scene" : "3× detail") { showDetail.toggle() }
+                                    .font(.system(.caption, design: .monospaced))
+                                    .accessibilityLabel(showDetail ? "Show full sample photograph" : "Inspect grain detail")
                             }
                             ZStack {
                                 Look.panel
                                 if renderedKey == previewKey, let displayed = showOriginal ? original : rendered {
-                                    Image(uiImage: displayed).resizable().scaledToFit()
-                                        .accessibilityLabel("\(sample.title) sample, \(showOriginal ? "original" : selectedStock.name)")
+                                    Image(uiImage: showDetail ? detail(displayed) : displayed).resizable().scaledToFit()
+                                        .accessibilityLabel("\(sample.title) \(showDetail ? "detail" : "sample"), \(showOriginal ? "original" : "\(selectedStock.name), \(selectedGrain.name) grain")")
                                 } else if let previewError {
                                     VStack { Image(systemName: "photo"); Text(previewError).font(.caption); Button("Retry") { Task { await loadPreview() } } }.padding()
                                 } else { ProgressView("Rendering film…") }
@@ -331,7 +335,7 @@ struct FilmPicker: View {
                                 Text(selectedStock.name).font(.system(.title3, design: .monospaced)).bold().foregroundStyle(Look.stock(selectedStock))
                                 Text(selectedStock.note).font(.caption).foregroundStyle(.secondary)
                             }
-                            Text("Built-in samples use the same film processing as your photographs. Your shooting viewfinder stays natural.")
+                            Text("Built-in samples use the same film processing as your photographs. Use 3× detail to inspect texture. Your shooting viewfinder stays natural.")
                                 .font(.caption).foregroundStyle(.secondary)
                         }.id("preview")
 
@@ -378,6 +382,15 @@ struct FilmPicker: View {
             .task(id: previewKey) { await loadPreview() }
             .onChange(of: selectedGrain) { _, _ in showOriginal = false }
         }.tint(Look.accent)
+    }
+
+    private func detail(_ image: UIImage) -> UIImage {
+        guard let source = image.cgImage else { return image }
+        let width = source.width / 3
+        let height = source.height / 3
+        let rect = CGRect(x: (source.width-width)/2, y: (source.height-height)/2, width: width, height: height)
+        guard let crop = source.cropping(to: rect) else { return image }
+        return UIImage(cgImage: crop)
     }
 
     @MainActor private func loadPreview() async {
