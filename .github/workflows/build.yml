@@ -22,6 +22,10 @@ jobs:
           mkdir -p build
           swiftc Latent36/Roll.swift Latent36/FilmProcessor.swift tests/main.swift -o build/check-rolls
           build/check-rolls
+      - name: Verify film library recovery safety
+        run: |
+          swiftc -parse-as-library Latent36/Roll.swift Latent36/FilmProcessor.swift Latent36/Vault.swift tests/vault.swift -o build/check-vault
+          build/check-vault
       - name: Build iPhone app
         run: bash scripts/build-ipa.sh
       - name: Upload IPA

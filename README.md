@@ -33,6 +33,8 @@ Official reference: https://github.com/LiveContainer/LiveContainer
 
 JPEGs are processed and AES-GCM-encrypted in private Application Support storage. Keys are stored in the same private installation rather than relying on shared keychain entitlements. Nothing is uploaded. File sharing is disabled. Counts change only after a successful photo write and atomic metadata save; failures do not consume an exposure. Existing unreadable libraries are not silently reset.
 
+If the film index is missing while encrypted photographs remain, startup stops without replacing the encryption key or creating an empty library. Damaged indexes, duplicate roll or frame references, and unsafe frame paths are rejected before the library opens. Keep the installation and its data if a library error appears; these checks preserve existing files but do not reconstruct a missing index.
+
 The wait uses a persisted local timestamp and survives relaunch/reboot without background execution. Keep automatic date/time enabled. This is an offline film ritual, **not a tamper-proof time lock** against changing the clock or extracting app data. Encryption prevents casual viewing of frame files; it is not intended to protect photos from the device owner or a privileged host. No previews or early-development bypass are shipped.
 
 ## Free builds
@@ -49,6 +51,8 @@ On a Mac with Xcode: `bash scripts/build-ipa.sh`.
 ## Validation
 
 CI executes the shared roll model against capacity limits, early-development rejection, explicit development start, the exact 24-hour boundary, extra-capture rejection, and JSON persistence, then compiles a Release iPhoneOS app. The packager checks for an arm64 Mach-O binary and correct iPhoneOS bundle before generating the IPA.
+
+The vault regression suite also uses disposable encrypted fixtures to check interrupted initialization, missing indexes, missing or invalid keys, malformed metadata, unchanged files after failed loads, retry after index restoration, and the development lock. Run it on a Mac with `mkdir -p build && swiftc -parse-as-library Latent36/Roll.swift Latent36/FilmProcessor.swift Latent36/Vault.swift tests/vault.swift -o build/check-vault && build/check-vault`.
 
 Physical camera, rendering appearance and LiveContainer execution require device testing. They cannot be verified by a Windows machine or a successful compiler result alone. See `PHONE-TEST.md` for the device checklist.
 
