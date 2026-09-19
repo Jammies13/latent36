@@ -50,6 +50,7 @@ struct RollCard: View {
                 Text("\(roll.frames.count)/36").font(.system(.callout, design: .monospaced))
             }.foregroundStyle(Look.stock(roll.stock))
             Text(roll.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary)
+            Text("\(roll.grain.name) grain").font(.caption).foregroundStyle(.secondary)
             if let readyAt = roll.readyAt {
                 if roll.isReady(at: now) {
                     HStack { Text("Developed. Open your photographs."); Spacer(); Image(systemName: "arrow.up.right") }.foregroundStyle(Look.paper)
@@ -95,6 +96,7 @@ struct ContactSheet: View {
         }
         .background(Look.background)
         .navigationTitle(roll.stock.name).navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom) { ExportStatusView() }
         .toolbar {
             Button { Task { await model.saveToPhotos(roll, frames: roll.frames) } } label: {
                 if model.busy { ProgressView() } else { Label("Save roll", systemImage: "square.and.arrow.down") }
@@ -121,6 +123,26 @@ struct PhotoView: View {
             }.buttonStyle(.borderedProminent).disabled(model.busy).padding(.bottom)
         }.frame(maxWidth: .infinity, maxHeight: .infinity).background(Look.background)
             .navigationTitle("Frame \(number)").navigationBarTitleDisplayMode(.inline)
+            .safeAreaInset(edge: .bottom) { ExportStatusView() }
+    }
+}
+
+struct ExportStatusView: View {
+    @EnvironmentObject var model: AppModel
+    var body: some View {
+        if let progress = model.exportProgress {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Saved \(progress.saved) of \(progress.total)").font(.subheadline.monospacedDigit())
+                    Spacer()
+                    Button("Stop") { model.cancelExport() }.disabled(progress.stopping)
+                }
+                ProgressView(value: Double(progress.saved), total: Double(progress.total)).tint(Look.accent)
+                if progress.stopping {
+                    Text("Stopping after the current photo finishes…").font(.caption).foregroundStyle(.secondary)
+                }
+            }.padding().background(.ultraThinMaterial)
+        }
     }
 }
 
@@ -174,6 +196,8 @@ struct GuideView: View {
                     Text("Each installation has its own film library. Moving between LiveContainer and a direct installation does not transfer rolls. Keep the existing installation until all photographs are developed and exported.")
                 }
                 Section("Your photographs") {
+                    Text("Choose Off, Fine, Classic or Heavy grain before loading film. The choice stays with the roll. Grain follows the film stock, with softer texture in deep shadows and highlights. Daylight, Amber, Dusk and Faded also add subtle highlight glow. Samples show the same processing used for new photographs.")
+                    Text("Saving a roll shows progress. Stop ends the export after any photo already being saved finishes. Saved copies stay in Photos and the whole roll stays in the Darkroom.")
                     Text("Photos stay on this device in encrypted app storage. Nothing is uploaded. Camera permission is needed to shoot; Photos permission is requested only when you export. There are no ads, analytics, accounts, or purchases.")
                     Text("Development continues while the app is closed using a saved deadline. Keep automatic date and time enabled. This offline wait is part of the experience, not a tamper-proof time lock.")
                     Text("Deleting this app or its LiveContainer data also deletes your rolls. Export developed photos before removing it. Repeated saves create additional copies in Photos.")

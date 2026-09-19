@@ -2,7 +2,7 @@
 
 ## Scope
 
-Protect existing photographs during library startup failures while retaining the bundle identifier, JSON schema, film recipes, and 24-hour development rule.
+Protect existing photographs during library startup failures while retaining the bundle identifier, compatibility with existing roll libraries, and the 24-hour development rule.
 
 ## Changes
 
@@ -12,11 +12,15 @@ Protect existing photographs during library startup failures while retaining the
 - Keep partially loaded metadata out of the actor's live state and reject access or development until loading succeeds.
 - Use specific library errors instead of reporting a capture-processing failure for damaged storage.
 - Add isolated vault regression fixtures and run them in the existing macOS build workflow.
+- Add per-roll Off, Fine, Classic and Heavy grain with a backward-compatible default, shared preview/capture rendering, stock-specific cluster sizes and highlight bloom.
+- Generate deterministic monochrome texture with bounded single-channel scratch, neutral overlay blending and cancellation checks.
+- Add Photos export progress and cooperative stopping after an in-flight save completes.
+- Add numerical texture regressions, full-resolution detail crops, and a Heavy grain simulator screenshot.
 
 ## Validation
 
 - Local whitespace and patch checks: `git diff --check`.
-- Swift, Apple frameworks, and Xcode are unavailable on this Windows host. The new Swift suite and iPhone build require the macOS CI run or a Mac; they have not been executed here.
+- Builds and Swift tests run through GitHub Actions on macOS. The first run caught a case-insensitive object filename collision between Vault.swift and vault.swift; renaming the test to VaultChecks.swift fixed the collision. Final run results will be recorded after validation.
 - No real photo library is accessed by the regression suite. It creates and removes only a uniquely named temporary fixture directory.
 
 ## Limits

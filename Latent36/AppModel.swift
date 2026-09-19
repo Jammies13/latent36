@@ -9,16 +9,22 @@ import ImageIO
     @Published var busy = false
     @Published var error: String?
     @Published var notice: String?
+    @Published private(set) var exportProgress: ExportProgress?
+    struct ExportProgress {
+        var saved: Int = 0
+        let total: Int
+        var stopping = false
+    }
     var active: Roll? { rolls.first { $0.developStartedAt == nil } }
 
     func load() async {
         do { rolls = try await vault.load(); loaded = true }
         catch { self.error = "Your film library could not be opened. Nothing has been reset. \(error.localizedDescription)" }
     }
-    func newRoll(_ stock: FilmStock) async {
+    func newRoll(_ stock: FilmStock, grain: FilmGrain = .classic) async {
         guard loaded, !busy else { return }
         busy = true; defer { busy = false }
-        do { rolls = try await vault.newRoll(stock: stock) }
+        do { rolls = try await vault.newRoll(stock: stock, grain: grain) }
         catch { self.error = error.localizedDescription }
     }
     func develop(_ roll: Roll) async {
@@ -35,8 +41,10 @@ import ImageIO
         } catch { self.error = "Exposure not saved; your counter has not advanced. \(error.localizedDescription)" }
     }
     func saveToPhotos(_ roll: Roll, frames: [String]) async {
-        guard !busy else { return }
-        busy = true; defer { busy = false }
+        guard !busy, !frames.isEmpty else { return }
+        busy = true
+        exportProgress = ExportProgress(total: frames.count)
+        defer { busy = false; exportProgress = nil }
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard status == .authorized || status == .limited else {
             error = "Allow Photos access in iOS Settings to save developed pictures. Inside LiveContainer, check the host app's Photos permission."
@@ -45,16 +53,24 @@ import ImageIO
         var saved = 0
         do {
             for frame in frames {
+                try Task.checkCancellation()
+                if exportProgress?.stopping == true { throw CancellationError() }
                 let data = try await vault.photo(rollID: roll.id, frame: frame)
+                try Task.checkCancellation()
+                if exportProgress?.stopping == true { throw CancellationError() }
                 try await PHPhotoLibrary.shared().performChanges {
                     let request = PHAssetCreationRequest.forAsset()
                     request.addResource(with: .photo, data: data, options: nil)
                 }
                 saved += 1
+                exportProgress?.saved = saved
             }
             notice = "Saved \(saved) photograph\(saved == 1 ? "" : "s") to Photos."
+        } catch is CancellationError {
+            notice = "Export stopped. Saved \(saved) of \(frames.count) photographs. Your roll is still in the Darkroom."
         } catch { self.error = "Saved \(saved) of \(frames.count). \(error.localizedDescription)" }
     }
+    func cancelExport() { exportProgress?.stopping = true }
 }
 
 @main struct Latent36App: App {

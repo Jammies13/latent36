@@ -34,6 +34,10 @@ xcrun simctl launch "$SIM_ID" com.jammies13.latent36 --show-film-picker --previe
 sleep 10
 xcrun simctl io "$SIM_ID" screenshot build/screenshots/film-picker-noir.png
 xcrun simctl terminate "$SIM_ID" com.jammies13.latent36
+xcrun simctl launch "$SIM_ID" com.jammies13.latent36 --show-film-picker --preview-noir --preview-heavy
+sleep 10
+xcrun simctl io "$SIM_ID" screenshot build/screenshots/film-picker-heavy-grain.png
+xcrun simctl terminate "$SIM_ID" com.jammies13.latent36
 xcrun simctl launch "$SIM_ID" com.jammies13.latent36 --show-film-picker --preview-original
 sleep 10
 xcrun simctl io "$SIM_ID" screenshot build/screenshots/film-picker-original.png

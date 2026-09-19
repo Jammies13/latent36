@@ -20,12 +20,16 @@ jobs:
       - name: Verify roll rules
         run: |
           mkdir -p build
-          swiftc Latent36/Roll.swift Latent36/FilmProcessor.swift tests/main.swift -o build/check-rolls
+          swiftc Latent36/Roll.swift Latent36/FilmTexture.swift Latent36/FilmProcessor.swift tests/main.swift -o build/check-rolls
           build/check-rolls
       - name: Verify film library recovery safety
         run: |
-          swiftc -parse-as-library Latent36/Roll.swift Latent36/FilmProcessor.swift Latent36/Vault.swift tests/VaultChecks.swift -o build/check-vault
+          swiftc -parse-as-library Latent36/Roll.swift Latent36/FilmTexture.swift Latent36/FilmProcessor.swift Latent36/Vault.swift tests/VaultChecks.swift -o build/check-vault
           build/check-vault
+      - name: Verify grain and highlight rendering
+        run: |
+          swiftc -parse-as-library Latent36/Roll.swift Latent36/FilmTexture.swift Latent36/FilmProcessor.swift tests/TextureChecks.swift -o build/check-texture
+          build/check-texture
       - name: Build iPhone app
         run: bash scripts/build-ipa.sh
       - name: Upload IPA

@@ -39,9 +39,10 @@ import CryptoKit
         let freshKey = try Data(contentsOf: fresh.appendingPathComponent("vault.key"))
         assert(freshKey.count == 32)
         assert(manager.fileExists(atPath: fresh.appendingPathComponent("rolls.json").path))
-        let created = try await freshVault.newRoll(stock: .amber)
+        let created = try await freshVault.newRoll(stock: .amber, grain: .heavy)
         let reopened = try await Vault(root: fresh).load()
         assert(created == reopened && reopened.count == 1)
+        assert(reopened[0].grain == .heavy)
         try expectBytes(fresh.appendingPathComponent("vault.key"), freshKey)
 
         // Simulate a crash between the first key write and index write.

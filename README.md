@@ -11,7 +11,8 @@ AI was used heavily in the development of this app. Example photos are not AI ge
 - Real AVFoundation capture with available physical main, ultra-wide, telephoto and selfie cameras.
 - Tap to focus/meter, auto exposure with EV compensation, manual ISO and shutter, manual focus, manual white balance, digital zoom, flash, thirds grid, 3/10-second timer.
 - Hardware capabilities determine available controls; switching lenses resets controls. Flash is disabled during manual exposure so the chosen exposure is respected.
-- Ten original Core Image recipes: Daylight 200, Amber 400, Chrome 100, Silver 400, Meadow 160, Coast 100, Dusk 800, Faded 100, Sepia 200, Noir 1600. The original four recipes retain their parameters.
+- Ten original Core Image recipes: Daylight 200, Amber 400, Chrome 100, Silver 400, Meadow 160, Coast 100, Dusk 800, Faded 100, Sepia 200, Noir 1600. The original four recipes retain their color-curve parameters.
+- Choose Off, Fine, Classic or Heavy grain before loading. Grain strength and size follow the stock and remain fixed for the roll. Texture is monochrome, stable for a given source photograph, and softer in deep shadows and bright highlights. Daylight, Amber, Dusk and Faded add subtle highlight bloom. Previously saved JPEGs are unchanged; existing rolls default to Classic for future captures.
 - Before loading, try any stock on four built-in sample photos (clouds, river, aurora, motorsport). Toggle Film/Original and explicitly press Load to commit. Previews use the same production renderer as captured photos and are cached in bounded memory; no network or Photos permission is needed for samples.
 - Natural viewfinder; processed film photographs are revealed only after development. Recipe numbers are creative names, not a forced sensor ISO or licensed commercial stock simulation.
 - Capture prefers approximately 12 MP where supported; rendered JPEGs are capped at 4096 pixels on the longest edge to bound memory. No RAW, video, or Live Photos.
@@ -52,7 +53,9 @@ On a Mac with Xcode: `bash scripts/build-ipa.sh`.
 
 CI executes the shared roll model against capacity limits, early-development rejection, explicit development start, the exact 24-hour boundary, extra-capture rejection, and JSON persistence, then compiles a Release iPhoneOS app. The packager checks for an arm64 Mach-O binary and correct iPhoneOS bundle before generating the IPA.
 
-The vault regression suite also uses disposable encrypted fixtures to check interrupted initialization, missing indexes, missing or invalid keys, malformed metadata, unchanged files after failed loads, retry after index restoration, and the development lock. Run it on a Mac with `mkdir -p build && swiftc -parse-as-library Latent36/Roll.swift Latent36/FilmProcessor.swift Latent36/Vault.swift tests/VaultChecks.swift -o build/check-vault && build/check-vault`.
+The vault regression suite also uses disposable encrypted fixtures to check interrupted initialization, missing indexes, missing or invalid keys, malformed metadata, unchanged files after failed loads, retry after index restoration, and the development lock. Run it on a Mac with `mkdir -p build && swiftc -parse-as-library Latent36/Roll.swift Latent36/FilmTexture.swift Latent36/FilmProcessor.swift Latent36/Vault.swift tests/VaultChecks.swift -o build/check-vault && build/check-vault`.
+
+Texture tests measure grain strength, cluster size, stable seeds, exposure neutrality, grayscale output, opacity and highlight bloom, then render detail crops for all four grain choices. Actions uploads these with the film sample renders. Whole-roll export shows saved/total progress and a Stop button; stopping finishes any in-flight Photos write and retains both saved copies and the original roll.
 
 Physical camera, rendering appearance and LiveContainer execution require device testing. They cannot be verified by a Windows machine or a successful compiler result alone. See `PHONE-TEST.md` for the device checklist.
 
@@ -62,6 +65,6 @@ The four supplied photographs were copied from decoded RGB pixels into clean PNG
 
 Visible signs, scenery, logos and other photographic content remain unchanged, as requested. Metadata removal does not anonymize visible content.
 
-This update retains the bundle identifier and roll storage schema. Update the existing LiveContainer app in place and keep its existing data container; do not delete it to install the update.
+This update retains the bundle identifier and reads existing roll libraries. A new grain field defaults to Classic when absent. Update the existing LiveContainer app in place and keep its existing data container; do not delete it to install the update.
 
 Camera layout: a large natural viewfinder, six direct controls (EV, ISO, shutter speed, focus, white balance, zoom), an inline adjustment slider, and AUTO/M switches. Options holds flash, grid, timer, reset, and field notes. The shutter loads film when empty and offers development when the roll is full. Darkroom is one tap from the camera.

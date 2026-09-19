@@ -34,10 +34,16 @@ for raw in ["daylight", "amber", "chrome", "silver"] {
     let legacy = "{\"id\":\"11111111-1111-1111-1111-111111111111\",\"stock\":\"\(raw)\",\"createdAt\":1,\"frames\":[\"existing.frame\"]}"
     let existing = try JSONDecoder().decode(Roll.self, from: Data(legacy.utf8))
     assert(existing.stock.rawValue == raw && existing.frames == ["existing.frame"])
+    assert(existing.grain == .classic, "Existing libraries must keep loading without a grain field")
 }
 for stock in FilmStock.allCases {
     let saved = try JSONDecoder().decode(Roll.self, from: JSONEncoder().encode(Roll(stock: stock, createdAt: start)))
     assert(saved.stock == stock)
+}
+for grain in FilmGrain.allCases {
+    let textured = Roll(stock: .silver, createdAt: start, grain: grain)
+    let restored = try JSONDecoder().decode(Roll.self, from: JSONEncoder().encode(textured))
+    assert(restored == textured && restored.grain == grain)
 }
 print("PASS: roll capacity, rejected early development, explicit timer start, exact 24-hour boundary, no extra captures, persisted deadline, all stocks.")
 

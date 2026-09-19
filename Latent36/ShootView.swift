@@ -278,18 +278,20 @@ struct FilmPicker: View {
     @EnvironmentObject var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @State private var selectedStock: FilmStock = .daylight
+    @State private var selectedGrain: FilmGrain = .classic
     @State private var sample: SampleScene = .clouds
     @State private var showOriginal = false
     @State private var rendered: UIImage?
     @State private var original: UIImage?
     @State private var previewError: String?
     @State private var renderedKey: String?
-    private var previewKey: String { sample.rawValue + "/" + selectedStock.rawValue }
+    private var previewKey: String { sample.rawValue + "/" + selectedStock.rawValue + "/" + selectedGrain.rawValue }
     init() {
         #if DEBUG
         let args = ProcessInfo.processInfo.arguments
         _selectedStock = State(initialValue: args.contains("--preview-noir") ? .noir : .daylight)
         _showOriginal = State(initialValue: args.contains("--preview-original"))
+        _selectedGrain = State(initialValue: args.contains("--preview-heavy") ? .heavy : .classic)
         #endif
     }
     var body: some View {
@@ -320,6 +322,11 @@ struct FilmPicker: View {
                             Picker("Sample photograph", selection: $sample) {
                                 ForEach(SampleScene.allCases) { scene in Text(scene.title).tag(scene) }
                             }.pickerStyle(.segmented)
+                            Text("GRAIN").font(.system(.caption, design: .monospaced)).tracking(2)
+                            Picker("Film grain", selection: $selectedGrain) {
+                                ForEach(FilmGrain.allCases) { grain in Text(grain.name).tag(grain) }
+                            }.pickerStyle(.segmented)
+                            Text(selectedGrain.note).font(.caption).foregroundStyle(.secondary)
                             VStack(alignment: .leading, spacing: 5) {
                                 Text(selectedStock.name).font(.system(.title3, design: .monospaced)).bold().foregroundStyle(Look.stock(selectedStock))
                                 Text(selectedStock.note).font(.caption).foregroundStyle(.secondary)
@@ -348,7 +355,7 @@ struct FilmPicker: View {
                                 }.buttonStyle(.plain).accessibilityAddTraits(stock == selectedStock ? .isSelected : [])
                             }
                         }
-                        Text("Choosing a preview does not load a roll. Tap Load film when you're ready. One stock stays with all 36 exposures; stock numbers aren't a forced sensor ISO.")
+                        Text("Choosing a preview does not load a roll. Tap Load film when you're ready. Stock and grain stay with all 36 exposures; stock numbers aren't a forced sensor ISO.")
                             .font(.caption).foregroundStyle(.secondary)
                     }.padding(18).frame(maxWidth: 600).frame(maxWidth: .infinity)
                 }
@@ -357,9 +364,10 @@ struct FilmPicker: View {
             .safeAreaInset(edge: .bottom) {
                 Button {
                     let stock = selectedStock
-                    Task { await model.newRoll(stock); if model.active != nil { dismiss() } }
+                    let grain = selectedGrain
+                    Task { await model.newRoll(stock, grain: grain); if model.active != nil { dismiss() } }
                 } label: {
-                    HStack { if model.busy { ProgressView() }; Text("Load \(selectedStock.name) · 36 exposures").font(.subheadline.bold()) }
+                    HStack { if model.busy { ProgressView() }; Text("Load \(selectedStock.name) · \(selectedGrain.name) grain").font(.subheadline.bold()) }
                         .frame(maxWidth: .infinity).padding(.vertical, 8)
                 }.buttonStyle(.borderedProminent)
                     .disabled(model.busy || !model.loaded || model.active != nil)
@@ -368,6 +376,7 @@ struct FilmPicker: View {
             .navigationTitle("Choose film").navigationBarTitleDisplayMode(.inline)
             .toolbar { Button("Done") { dismiss() } }
             .task(id: previewKey) { await loadPreview() }
+            .onChange(of: selectedGrain) { _, _ in showOriginal = false }
         }.tint(Look.accent)
     }
 
@@ -375,9 +384,10 @@ struct FilmPicker: View {
         let key = previewKey
         let scene = sample
         let stock = selectedStock
+        let grain = selectedGrain
         renderedKey = nil; previewError = nil
         do {
-            let images = try await SamplePreviews.shared.images(scene: scene, stock: stock)
+            let images = try await SamplePreviews.shared.images(scene: scene, stock: stock, grain: grain)
             guard !Task.isCancelled, previewKey == key else { return }
             original = images.original; rendered = images.film; renderedKey = key
         } catch {
@@ -404,17 +414,17 @@ actor SamplePreviews {
         cache.countLimit = 12
         return cache
     }()
-    func images(scene: SampleScene, stock: FilmStock) throws -> Pair {
+    func images(scene: SampleScene, stock: FilmStock, grain: FilmGrain) throws -> Pair {
         try Task.checkCancellation()
         guard let url = Bundle.main.url(forResource: scene.rawValue, withExtension: "png", subdirectory: "PreviewSamples") else { throw RollError.invalidData }
-        let key = "\(scene.rawValue)/\(stock.rawValue)" as NSString
+        let key = "\(scene.rawValue)/\(stock.rawValue)/\(grain.rawValue)" as NSString
         let originalKey = "\(scene.rawValue)/original" as NSString
         return try autoreleasepool {
             let data = try Data(contentsOf: url)
             let original = try cache.object(forKey: originalKey) ?? thumbnail(data)
             cache.setObject(original, forKey: originalKey, cost: 1200 * 900 * 4)
             if let film = cache.object(forKey: key) { return Pair(original: original, film: film) }
-            let processed = try processor.render(data, stock: stock)
+            let processed = try processor.render(data, stock: stock, grain: grain)
             try Task.checkCancellation()
             let film = try thumbnail(processed)
             cache.setObject(film, forKey: key, cost: 1200 * 900 * 4)

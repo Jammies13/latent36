@@ -89,16 +89,16 @@ actor Vault {
         try data.write(to: root.appendingPathComponent("rolls.json"), options: [.atomic, .completeFileProtectionUnlessOpen])
         rolls = updated
     }
-    func newRoll(stock: FilmStock) throws -> [Roll] {
+    func newRoll(stock: FilmStock, grain: FilmGrain = .classic) throws -> [Roll] {
         guard loaded else { throw VaultError.notLoaded }
         guard !rolls.contains(where: { $0.developStartedAt == nil }) else { throw RollError.busy }
-        try persist(rolls + [Roll(stock: stock, createdAt: Date())])
+        try persist(rolls + [Roll(stock: stock, createdAt: Date(), grain: grain)])
         return rolls
     }
     func capture(_ data: Data, rollID: UUID) throws -> [Roll] {
         guard loaded, let key, let index = rolls.firstIndex(where: { $0.id == rollID }) else { throw RollError.noRoll }
         guard rolls[index].canShoot else { throw RollError.full }
-        let jpeg = try autoreleasepool { try processor.render(data, stock: rolls[index].stock) }
+        let jpeg = try autoreleasepool { try processor.render(data, stock: rolls[index].stock, grain: rolls[index].grain) }
         let sealed = try AES.GCM.seal(jpeg, using: key)
         guard let bytes = sealed.combined else { throw RollError.invalidData }
         let name = UUID().uuidString + ".frame"
